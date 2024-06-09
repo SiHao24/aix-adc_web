@@ -9,9 +9,9 @@ const typeMap = {
   number: 'number'
 }
 
-let interfaceStrs = ''
-let apisStr = `import request from '@/config/axios'
+let interfaceStrs = `import request from '@/config/axios'
 `
+let apisStr = ``
 const interfaceMap = {}
 https.get('https://dms.zongmutech.com/dcs/server/swagger/doc.json', res => {
   res.setEncoding('utf-8')
@@ -71,7 +71,49 @@ https.get('https://dms.zongmutech.com/dcs/server/swagger/doc.json', res => {
       }
     })
 
-    fs.writeFile(`${path.resolve(__dirname)}/interface.json`, JSON.stringify(interfaceMap), err => {
+    Object.entries(interfaceMap).forEach(item => {
+      const [key, values] = item
+      let itemInterface = ``
+      const keys = key.split('.')
+      const interfaceName = keys[keys.length - 1]
+      Object.keys(values).forEach(itemKey => {
+        if (!/\-/g.test(itemKey)) {
+          const { type, itemType, dep, description, isRequired  } = values[itemKey]
+          const finalType = typeMap[type]
+          if (!dep) {
+            // 基本类型
+            if (type !== 'array') {
+              itemInterface += `${itemKey}${isRequired ? '?' : ''}: ${finalType} ${description ? `// ${description}` : ''}
+              `
+            } else {
+              // 基本类型数组
+              itemInterface += `${itemKey}${isRequired ? '?' : ''}: ${typeMap[itemType]}[] ${description ? `// ${description}` : ''}
+              `
+            }
+          }
+
+          // 对象类型
+          if (type === undefined && dep) {
+            // console.log('====itemKey: ', itemKey, values[itemKey])
+            // const deps = interfaceMap[dep]
+            // let depStr = ``
+            // Object.keys(deps).forEach(depKey => {
+
+            // })
+            //   itemInterface += `${itemKey}${isRequired ? '?' : ''}: ${interfaceMap[dep]} ${description ? `// ${description}` : ''}
+            // `
+          }
+        }
+      })
+
+      interfaceStrs += `
+        export interface ${interfaceName} {
+          ${itemInterface}
+        }
+          `
+    })
+
+    fs.writeFile(`${path.resolve(__dirname)}/api.ts`, interfaceStrs, err => {
       Object.entries(paths).forEach(item => {
         const [path, value] = item
         if (path.includes('/collection')) {
@@ -94,7 +136,7 @@ https.get('https://dms.zongmutech.com/dcs/server/swagger/doc.json', res => {
         }
       })
 
-      fs.writeFile(`${path.resolve(__dirname)}/api.ts`, apisStr, err => {
+      fs.appendFile(`${path.resolve(__dirname)}/api.ts`, apisStr, err => {
         if (err) {
           return console.log('api内容生成失败: ', err)
         }
