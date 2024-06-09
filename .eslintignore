@@ -6,3 +6,6 @@
 /node_modules/*
 /dist*
 /src/main.ts
+/dist-prod/
+/dist-test/
+/dist-stage/
