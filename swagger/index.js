@@ -2,11 +2,13 @@ const https = require('https');
 const fs = require('fs')
 const path = require('path');
 const args = require('minimist')(process.argv.slice(2))
+const chalk = require('chalk');
 
+const log = console.log
 const argsList = args._
 const argsMap = {}
 if (!argsList.length) {
-  return console.error('缺少参数~')
+  return log(chalk.red('缺少参数~'))
 }
 argsList.forEach(item => {
   const [key, value] = item.split('=')
@@ -16,11 +18,11 @@ argsList.forEach(item => {
 const { url, module: interfaceModule } = argsMap
 
 if (!url) {
-  return console.error('请输入url~')
+  return log(chalk.red('请输入url~'))
 }
 
 if (!interfaceModule) {
-  return console.error('请指定模块~')
+  return log(chalk.red('请指定模块~'))
 }
 
 const typeMap = {
@@ -39,9 +41,7 @@ https.get(url, res => {
   let body = ''
   const { statusCode } = res
   if (statusCode !== 200) {
-    console.error(`请求错误，错误码：${statusCode}`)
-
-    return
+    return log(chalk.red(`请求错误，错误码：${statusCode}`))
   }
   res.on('data', data => {
     body += data
@@ -159,9 +159,9 @@ https.get(url, res => {
 
       fs.appendFile(`${path.resolve(__dirname)}/api.ts`, apisStr, err => {
         if (err) {
-          return console.log('api内容生成失败: ', err)
+          return log(chalk.redBright('api内容生成失败: ', err))
         }
-        console.log('api内容写入成功_^^_')
+        log(chalk.greenBright('api内容写入成功_^^_'))
       })
     })
   })
