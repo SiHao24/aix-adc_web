@@ -1,6 +1,27 @@
 const https = require('https');
 const fs = require('fs')
 const path = require('path');
+const args = require('minimist')(process.argv.slice(2))
+
+const argsList = args._
+const argsMap = {}
+if (!argsList.length) {
+  return console.error('缺少参数~')
+}
+argsList.forEach(item => {
+  const [key, value] = item.split('=')
+  argsMap[key] = value
+})
+
+const { url, module: interfaceModule } = argsMap
+
+if (!url) {
+  return console.error('请输入url~')
+}
+
+if (!interfaceModule) {
+  return console.error('请指定模块~')
+}
 
 const typeMap = {
   string: 'string',
@@ -13,7 +34,7 @@ let interfaceStrs = `import request from '@/config/axios'
 `
 let apisStr = ``
 const interfaceMap = {}
-https.get('https://dms.zongmutech.com/dcs/server/swagger/doc.json', res => {
+https.get(url, res => {
   res.setEncoding('utf-8')
   let body = ''
   const { statusCode } = res
@@ -116,7 +137,7 @@ https.get('https://dms.zongmutech.com/dcs/server/swagger/doc.json', res => {
     fs.writeFile(`${path.resolve(__dirname)}/api.ts`, interfaceStrs, err => {
       Object.entries(paths).forEach(item => {
         const [path, value] = item
-        if (path.includes('/collection')) {
+        if (path.includes(interfaceModule)) {
           Object.entries(value).forEach(item => {
             const [method, options] = item
             const { summary } = options

@@ -1,7 +1,5 @@
 import request from '@/config/axios'
 
-
-
 export interface AliyunOSS {
   endpoint: string
 
@@ -56,6 +54,7 @@ export interface Elastic {
   host: string
   name: string
   pwd: string
+
 }
 
 export interface Email {
